@@ -26,15 +26,15 @@ void main()
     int rc;
     struct message msg;
 
-    // 맥북 테스트용
-    if ((sync_sem = sem_open("/semaphore", O_CREAT, 0644, 1)) == SEM_FAILED) {
-        perror("sem_open");
-    }
-    // if (sem_init(&sync_sem, 0, 1) == -1)
-    // {
+    // // 맥북 테스트용
+    // if ((sync_sem = sem_open("/semaphore", O_CREAT, 0644, 1)) == SEM_FAILED) {
     //     perror("sem_open");
-    //     exit(1);
     // }
+    if (sem_init(&sync_sem, 0, 1) == -1)
+    {
+        perror("sem_open");
+        exit(1);
+    }
 
     for (int i = 0; i < 10; i++)
     {
