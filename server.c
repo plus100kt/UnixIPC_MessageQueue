@@ -7,6 +7,7 @@
 #include <sys/ipc.h>
 #include <unistd.h>
 #include "message.h"
+#include <time.h>
 
 #define MEMSIZE 4;
 
@@ -25,16 +26,15 @@ void main()
     int rc;
     struct message msg;
 
-    // // 맥북 테스트용
-    // if ((sync_sem = sem_open("/semaphore", O_CREAT, 0644, 1)) == SEM_FAILED) {
-    //     perror("sem_open");
-    //     exit(EXIT_FAILURE);
-    // }
-    if (sem_init(&sync_sem, 0, 1) == -1)
-    {
+    // 맥북 테스트용
+    if ((sync_sem = sem_open("/semaphore", O_CREAT, 0644, 1)) == SEM_FAILED) {
         perror("sem_open");
-        exit(1);
     }
+    // if (sem_init(&sync_sem, 0, 1) == -1)
+    // {
+    //     perror("sem_open");
+    //     exit(1);
+    // }
 
     for (int i = 0; i < 10; i++)
     {
@@ -47,6 +47,13 @@ void main()
         msg.msg_type = 1;
         msg.data.client_num = i;
         msg.data.attr = 0;
+        
+        // 메시지를 보내는 시간
+        struct timespec time;
+        if(clock_gettime(CLOCK_MONOTONIC, &time) == -1 ) {
+            perror( "clock gettime" );
+        }
+        msg.data.time = time;
         if(msgsnd(msqid, &msg ,sizeof(struct clientData), 0)==-1){
             printf("msgsnd failed\n");
             exit(0);
@@ -81,11 +88,20 @@ void provide(int msqid, struct message msg)
     printf("client num : %d\n", msg.data.client_num);
     sem_wait(&sync_sem);
     components--;
+    
     // 요청한 부품 보내기
-    // msg_type 제외하고 생략 가능하지면 명시적으로 표현
     msg.msg_type = 3;
-    msg.data.client_num = 1;
+    msg.data.client_num = 0;
     msg.data.attr = 1;
+    
+    // 서버에서 메시지를 보내는 시간
+    struct timespec time;
+    if( clock_gettime(CLOCK_MONOTONIC, &time) == -1 ) {
+        perror( "clock gettime" );
+    }
+
+    msg.data.time = time;
+
     if(msgsnd(msqid, &msg ,sizeof(struct clientData), 0)==-1){
         printf("msgsnd failed\n");
         exit(0);

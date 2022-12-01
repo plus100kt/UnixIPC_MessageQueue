@@ -8,8 +8,8 @@
 #include <unistd.h>
 #include <sys/msg.h>
 #include "message.h"
+#include <time.h>
 
-#define MEMSIZE 4;
 
 void checkUsableClient(int msqid);
 void choiceClient(int msqid, int *client);
@@ -31,12 +31,14 @@ typedef struct Car
 
 void main()
 {
-    int memsize = MEMSIZE;
     int initsetval = 0;
     int client;
     key_t key = (key_t)60110;
     int msqid;
     struct message msg;
+    struct timespec time;
+    struct timespec begin;
+    struct timespec end;
 
     
     // 메시지큐 연결 (없으면 오류)
@@ -50,8 +52,7 @@ void main()
 
     // // 맥북테스트용
     // if ((sync_sem = sem_open("/semaphore", O_CREAT, 0644, 1)) == SEM_FAILED) {
-    //     perror("sem_open");
-    //     exit(EXIT_FAILURE);
+    //     perror("sem_open");;
     // }
     if (sem_init(&sync_sem, 0, 1) == -1)
     {
@@ -98,6 +99,8 @@ void main()
             msg.msg_type = 2;
             msg.data.client_num = client;
             msg.data.attr = 1;
+            msg.data.time.tv_nsec = 0;
+            msg.data.time.tv_sec = 0;
             if(msgsnd(msqid, &msg ,sizeof(struct clientData), 0)==-1){
                 printf("msgsnd failed\n");
                 exit(0);
@@ -107,6 +110,24 @@ void main()
             if(msgrcv(msqid, &msg, sizeof(struct clientData), 3 ,0)==-1){
                 printf("msgrcv failed\n");
                 exit(0);
+            }
+
+            // 시간 측정
+            struct timespec time;
+            if( clock_gettime(CLOCK_MONOTONIC, &time) == -1 ) {
+                perror( "clock gettime" );
+            }
+            
+            begin = msg.data.time;
+            end = time;
+
+            if (end.tv_nsec - begin.tv_nsec < 0)
+            {
+                printf("Client %d : %ld.%09ld sec\n", msg.data.client_num, end.tv_sec - begin.tv_sec - 1, end.tv_nsec - begin.tv_nsec + 1000000000);
+            }
+            else
+            {
+                printf("Client %d : %ld.%09ld sec\n", msg.data.client_num, end.tv_sec - begin.tv_sec, end.tv_nsec - begin.tv_nsec);
             }
             components++;
             
