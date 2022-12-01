@@ -117,7 +117,7 @@ void main()
             if( clock_gettime(CLOCK_MONOTONIC, &time) == -1 ) {
                 perror( "clock gettime" );
             }
-            
+
             begin = msg.data.time;
             end = time;
 
@@ -133,7 +133,6 @@ void main()
             
             sem_post(&sync_sem);
         }
-        sleep(3);
     }
 
 }
@@ -206,6 +205,7 @@ void *makeCar(void *ptr)
     {
         if (components > 0)
         {
+            sleep(3);
             sem_wait(&sync_sem);
             components--; // 부품 갯수 빼주는 녀석
             sem_post(&sync_sem);
@@ -218,7 +218,6 @@ void *makeCar(void *ptr)
             current_made_car->next = NULL;
             printf("car %d is created, client have %d components\n", i, components);
             i++;
-            sleep(3);
         }
     }
 }
@@ -231,11 +230,11 @@ void *paintCar(void *ptr)
     {
         if ((current_painted_car->next != NULL) && current_painted_car->next->isCreated)
         {
+            sleep(1);
             current_painted_car = current_painted_car->next;
             current_painted_car->isPainted = true;
             printf("car %d is painted\n", i);
             i++;
-            sleep(1);
         }
     }
 }
@@ -248,13 +247,13 @@ void *inspectCar(void *ptr)
     {
         if (current_inspect_target->next != NULL && current_inspect_target->next->isPainted)
         {
+            sleep(2);
             Car *inpected_car = current_inspect_target;
             current_inspect_target = current_inspect_target->next;
             current_inspect_target->isInspected = true;
             free(inpected_car);
             printf("car %d is inspected\n", i);
             i++;
-            sleep(2);
         }
     }
 }
