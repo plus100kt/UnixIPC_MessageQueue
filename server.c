@@ -85,7 +85,7 @@ void main()
 
 void provide(int msqid, struct message msg)
 {
-    printf("client num : %d\n", msg.data.client_num);
+    printf("client request : %d\n", msg.data.client_num);
     sem_wait(&sync_sem);
     components--;
     
